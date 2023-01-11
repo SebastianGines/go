@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index</title>
+</head>
+<body>
+    {{ template "header" }}
+
+    <h1>Usuarios</h1>
+    <h2>Hola {{ .UserName }}</h2>
+    <h2>Tu edad: {{ .Age }}</h2>
+    <!-- Variables -->
+    {{ with $valor := "Mi variable" }}
+        <p>{{ $valor }}</p>
+    {{ end }}
+
+    <!-- Condicionales -->
+    {{ if not .Active }}
+        <p>El usuario No está activo en la plataforma</p>
+    {{ else }}
+        <p>El usuario está activo en la plataforma</p>
+    {{ end }}
+
+    {{ if (and .Active .Admin) }}
+        <p>El usuario es administrador</p>
+    {{ end }}
+
+    {{ if ge .Age 21 }} <!-- Edad mayor igual a 21 -->
+        <p>El usuario es mayor de edad</p>
+    {{ end }}
+
+    <!-- Iterator -->
+    <h2>Cursos</h2>
+    <ul>
+        {{ range.Cursos }}
+            <li>{{ .Name }}</li>
+        {{ end }}
+    </ul>
+
+    <!-- Funciones -->
+    <h2>Funciones</h2>
+    <p>{{ saludar .UserName }}</p>
+
+    {{ template "footer" }}
+</body>
+</html>
