@@ -3,7 +3,6 @@ package handlers
 import (
 	"apirest/models"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -11,60 +10,69 @@ import (
 )
 
 func GetUsers(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Content-Type", "application/json")
-	//rw.Header().Set("Content-Type", "text/xml")
-	users, _ := models.ListUsers()
-	output, _ := json.Marshal(users)
-	//output, _ := xml.Marshal(users)
-	//output, _ := yaml.Marshal(users)
-	fmt.Fprintln(rw, string(output))
+	if users, err := models.ListUsers(); err != nil {
+		models.SendNotFound(rw)
+	} else {
+		models.SendData(rw, users)
+	}
 }
 
 func GetUser(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Content-Type", "application/json")
-	// Obtener id
-	vars := mux.Vars(r)
-	userId, _ := strconv.Atoi(vars["id"])
-	user, _ := models.GetUser(userId)
-	output, _ := json.Marshal(user)
-	fmt.Fprintln(rw, string(output))
+	if user, err := GetUserByRequest(r); err != nil {
+		models.SendNotFound(rw)
+	} else {
+		models.SendData(rw, user)
+	}
 }
 
 func CreateUser(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Content-Type", "application/json")
 	// Obtener registro a crear
 	user := models.User{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&user); err != nil {
-		fmt.Fprintln(rw, http.StatusUnprocessableEntity)
+		models.SendUnprocessableEntity(rw)
 	} else {
 		user.Save()
+		models.SendData(rw, user)
 	}
-	output, _ := json.Marshal(user)
-	fmt.Fprintln(rw, string(output))
 }
 
 func UpdateUser(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Content-Type", "application/json")
 	// Obtener registro a crear
+	var userId int64
+	if user, err := GetUserByRequest(r); err != nil {
+		models.SendNotFound(rw)
+	} else {
+		userId = user.Id
+	}
 	user := models.User{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&user); err != nil {
-		fmt.Fprintln(rw, http.StatusUnprocessableEntity)
+		models.SendUnprocessableEntity(rw)
 	} else {
+		user.Id = userId
 		user.Save()
+		models.SendData(rw, user)
 	}
-	output, _ := json.Marshal(user)
-	fmt.Fprintln(rw, string(output))
 }
 
 func DeleteUser(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Set("Content-Type", "application/json")
+	if user, err := GetUserByRequest(r); err != nil {
+		models.SendNotFound(rw)
+	} else {
+		user.Delete()
+		models.SendData(rw, user)
+	}
+}
+
+func GetUserByRequest(r *http.Request) (models.User, error) {
 	// Obtener id
 	vars := mux.Vars(r)
 	userId, _ := strconv.Atoi(vars["id"])
-	user, _ := models.GetUser(userId)
-	user.Delete()
-	output, _ := json.Marshal(user)
-	fmt.Fprintln(rw, string(output))
+	if user, err := models.GetUser(userId); err != nil {
+		return *user, err
+	} else {
+		return *user, nil
+	}
+
 }
